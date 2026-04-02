@@ -158,7 +158,7 @@ export async function uploadBinaryFile(pat, owner, repo, filePath, base64Content
  * Strips any remaining Google API keys from the HTML as a safety net.
  */
 export async function processPhotosForPublish(pat, owner, repo, html) {
-  // Match proxy photo URLs
+  // Match proxy photo URLs (handles both raw & and HTML-encoded &amp;)
   const photoRegex = /\/api\/google-places\/maps\/api\/place\/photo\?[^"'\s)]+/g;
   const matches = [...new Set(html.match(photoRegex) || [])];
 
@@ -167,12 +167,18 @@ export async function processPhotosForPublish(pat, owner, repo, html) {
   }
 
   const replacements = {};
+  const failed = new Set();
 
   await Promise.all(
     matches.map(async (url, i) => {
       try {
-        const response = await fetch(url);
-        if (!response.ok) return;
+        // Decode &amp; to & so the proxy receives valid query params
+        const fetchUrl = url.replace(/&amp;/g, '&');
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+          failed.add(url);
+          return;
+        }
 
         const blob = await response.blob();
         const buffer = await blob.arrayBuffer();
@@ -187,6 +193,7 @@ export async function processPhotosForPublish(pat, owner, repo, html) {
         replacements[url] = filePath;
       } catch (err) {
         console.warn(`Failed to upload photo ${i + 1}:`, err);
+        failed.add(url);
       }
     })
   );
@@ -195,6 +202,19 @@ export async function processPhotosForPublish(pat, owner, repo, html) {
   let processedHtml = html;
   for (const [originalUrl, relativePath] of Object.entries(replacements)) {
     processedHtml = processedHtml.replaceAll(originalUrl, relativePath);
+  }
+
+  // Clean up any photos that failed to download
+  for (const url of failed) {
+    const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Remove <img> tags with the failed URL
+    processedHtml = processedHtml.replace(
+      new RegExp(`<img[^>]*src=["']${escaped}["'][^>]*\\/?>`, 'g'),
+      ''
+    );
+    // Remove remaining occurrences (CSS background-image, inline styles, etc.)
+    // Leaves background-image: url() which browsers treat as no image
+    processedHtml = processedHtml.replaceAll(url, '');
   }
 
   return processedHtml;

@@ -84,7 +84,7 @@ export default function GitHubPublish() {
     try {
       const pat = githubPat;
       const owner = githubUsername;
-      const repo = repoName.trim();
+      let repo = repoName.trim();
 
       // Step 1: Create repo
       setStatusText('Creating GitHub repository...');
@@ -98,6 +98,7 @@ export default function GitHubPublish() {
           for (const alt of alternatives) {
             try {
               await createRepo(pat, alt);
+              repo = alt;
               setRepoName(alt);
               created = true;
               break;
@@ -115,26 +116,26 @@ export default function GitHubPublish() {
 
       // Step 2: Download photos, upload to repo, and strip API keys from HTML
       setStatusText('Processing photos...');
-      const cleanHtml = await processPhotosForPublish(pat, owner, repoName.trim(), generatedHtml);
+      const cleanHtml = await processPhotosForPublish(pat, owner, repo, generatedHtml);
 
       // Step 3: Upload index.html (with local photo paths, no API keys)
       setStatusText('Uploading website files...');
-      await uploadFile(pat, owner, repoName.trim(), 'index.html', cleanHtml, 'Add website');
+      await uploadFile(pat, owner, repo, 'index.html', cleanHtml, 'Add website');
 
       // Step 4: Enable GitHub Pages
       setStatusText('Enabling GitHub Pages...');
       try {
-        await enablePages(pat, owner, repoName.trim());
+        await enablePages(pat, owner, repo);
       } catch {
         // Pages might auto-enable, continue
       }
 
       // Step 5: Wait for deployment
       setStatusText('Waiting for site to go live...');
-      const liveUrl = await waitForPages(pat, owner, repoName.trim());
+      const liveUrl = await waitForPages(pat, owner, repo);
 
       setPublishedUrl(liveUrl);
-      setPublishedRepoName(repoName.trim());
+      setPublishedRepoName(repo);
       updateBusiness(currentBusinessId, {
         generatedUrl: liveUrl,
         status: 'in_progress',
