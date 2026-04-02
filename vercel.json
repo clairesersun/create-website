@@ -1,6 +1,8 @@
 {
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/google-places/:path+", "destination": "/api/google-places?__path=/:path+" },
+    { "source": "/api/brave-search/:path+", "destination": "/api/brave-search?__path=/:path+" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
