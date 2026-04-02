@@ -1,7 +1,10 @@
 export default async function handler(req, res) {
   try {
-    const { __path, ...queryParams } = req.query;
-    const pathStr = __path || '/';
+    const pathSegments = req.query.path || [];
+    const pathStr = '/' + pathSegments.join('/');
+
+    const queryParams = { ...req.query };
+    delete queryParams.path;
 
     const url = new URL(`https://api.search.brave.com${pathStr}`);
     for (const [key, value] of Object.entries(queryParams)) {
