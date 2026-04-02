@@ -53,7 +53,17 @@ function apiProxy(env) {
       // Google Places API — handles JSON and image (photo) responses
       server.middlewares.use('/api/google-places', async (req, res) => {
         try {
-          const url = new URL(`https://maps.googleapis.com${req.url}`);
+          const reqUrl = new URL(req.url, 'http://localhost');
+          const endpoint = reqUrl.searchParams.get('endpoint');
+          if (!endpoint) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Missing endpoint parameter' }));
+            return;
+          }
+          const url = new URL(`https://maps.googleapis.com${endpoint}`);
+          reqUrl.searchParams.forEach((value, key) => {
+            if (key !== 'endpoint') url.searchParams.set(key, value);
+          });
           url.searchParams.set('key', env.GOOGLE_PLACES_API_KEY);
 
           const response = await fetch(url.toString());
@@ -77,7 +87,17 @@ function apiProxy(env) {
       // Brave Search API
       server.middlewares.use('/api/brave-search', async (req, res) => {
         try {
-          const url = new URL(`https://api.search.brave.com${req.url}`);
+          const reqUrl = new URL(req.url, 'http://localhost');
+          const endpoint = reqUrl.searchParams.get('endpoint');
+          if (!endpoint) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Missing endpoint parameter' }));
+            return;
+          }
+          const url = new URL(`https://api.search.brave.com${endpoint}`);
+          reqUrl.searchParams.forEach((value, key) => {
+            if (key !== 'endpoint') url.searchParams.set(key, value);
+          });
           const response = await fetch(url.toString(), {
             headers: { 'X-Subscription-Token': env.BRAVE_SEARCH_API_KEY },
           });

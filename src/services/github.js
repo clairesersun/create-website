@@ -159,7 +159,7 @@ export async function uploadBinaryFile(pat, owner, repo, filePath, base64Content
  */
 export async function processPhotosForPublish(pat, owner, repo, html) {
   // Match proxy photo URLs (handles both raw & and HTML-encoded &amp;)
-  const photoRegex = /\/api\/google-places\/maps\/api\/place\/photo\?[^"'\s)]+/g;
+  const photoRegex = /\/api\/google-places\?endpoint=\/maps\/api\/place\/photo[&][^"'\s)]+/g;
   const matches = [...new Set(html.match(photoRegex) || [])];
 
   if (matches.length === 0) {

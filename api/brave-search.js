@@ -1,12 +1,14 @@
 export default async function handler(req, res) {
   try {
-    const pathSegments = req.query.path || [];
-    const pathStr = '/' + pathSegments.join('/');
+    const endpoint = req.query.endpoint;
+    if (!endpoint) {
+      return res.status(400).json({ error: 'Missing endpoint parameter' });
+    }
 
     const queryParams = { ...req.query };
-    delete queryParams.path;
+    delete queryParams.endpoint;
 
-    const url = new URL(`https://api.search.brave.com${pathStr}`);
+    const url = new URL(`https://api.search.brave.com${endpoint}`);
     for (const [key, value] of Object.entries(queryParams)) {
       url.searchParams.set(key, value);
     }

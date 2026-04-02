@@ -1,6 +1,6 @@
 export async function searchBusinesses(city) {
   const query = `businesses in ${city}`;
-  const url = `/api/google-places/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}`;
+  const url = `/api/google-places?endpoint=/maps/api/place/textsearch/json&query=${encodeURIComponent(query)}`;
 
   const response = await fetch(url);
 
@@ -42,7 +42,7 @@ export async function searchBusinesses(city) {
       reviewCount: place.user_ratings_total || 0,
       photoCount: place.photos?.length || 0,
       photos: (place.photos || []).slice(0, 10).map((p) =>
-        `/api/google-places/maps/api/place/photo?maxwidth=800&photo_reference=${p.photo_reference}`
+        `/api/google-places?endpoint=/maps/api/place/photo&maxwidth=800&photo_reference=${p.photo_reference}`
       ),
       phone: place.formatted_phone_number || '',
       hours: place.opening_hours?.weekday_text || [],
@@ -66,7 +66,7 @@ export async function searchBusinesses(city) {
 
 async function getPlaceDetails(placeId) {
   const fields = 'place_id,name,formatted_address,rating,user_ratings_total,photos,opening_hours,formatted_phone_number,website,types,url';
-  const url = `/api/google-places/maps/api/place/details/json?place_id=${placeId}&fields=${fields}`;
+  const url = `/api/google-places?endpoint=/maps/api/place/details/json&place_id=${placeId}&fields=${fields}`;
 
   try {
     const response = await fetch(url);
@@ -87,7 +87,7 @@ async function searchContactInfo(businessName, location) {
   // Extract city from address for a cleaner query
   const city = location.split(',').slice(-2, -1)[0]?.trim() || location;
   const query = `"${businessName}" ${city}`;
-  const url = `/api/brave-search/res/v1/web/search?q=${encodeURIComponent(query)}&count=10`;
+  const url = `/api/brave-search?endpoint=/res/v1/web/search&q=${encodeURIComponent(query)}&count=10`;
 
   try {
     const response = await fetch(url);
@@ -177,7 +177,7 @@ function getCategoryFromTypes(types) {
 }
 
 export function getPhotoUrl(photoReference, maxWidth = 400) {
-  return `/api/google-places/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}`;
+  return `/api/google-places?endpoint=/maps/api/place/photo&maxwidth=${maxWidth}&photo_reference=${photoReference}`;
 }
 
 export function calculateScore(business) {
