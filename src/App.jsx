@@ -12,6 +12,7 @@ import ThemeSummary from './screens/ThemeSummary';
 import WebsitePreview from './screens/WebsitePreview';
 import GitHubPublish from './screens/GitHubPublish';
 import LiveUrl from './screens/LiveUrl';
+import PasswordGate from './screens/PasswordGate';
 
 export default function App() {
   const darkMode = useStore((s) => s.darkMode);
@@ -21,6 +22,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <PasswordGate>
       <BrowserRouter>
         <Routes>
           {!onboardingComplete ? (
@@ -39,6 +41,7 @@ export default function App() {
           )}
         </Routes>
       </BrowserRouter>
+      </PasswordGate>
     </ThemeProvider>
   );
 }

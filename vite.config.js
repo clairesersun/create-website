@@ -17,6 +17,13 @@ function apiProxy(env) {
   return {
     name: 'api-proxy',
     configureServer(server) {
+      // Auth — always allow in dev (no SITE_PASSWORD set)
+      server.middlewares.use('/api/auth', (req, res, next) => {
+        if (req.method !== 'POST') return next();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      });
+
       // Claude API — POST only
       server.middlewares.use('/api/claude', (req, res, next) => {
         if (req.method !== 'POST') return next();
