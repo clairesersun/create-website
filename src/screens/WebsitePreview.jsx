@@ -90,7 +90,14 @@ export default function WebsitePreview() {
       setSnackbar('Changes applied!');
     } catch (err) {
       console.error('Failed to apply changes:', err);
-      setSnackbar('Failed to apply changes. Please try again.');
+      const message = err.message || 'Unknown error';
+      if (message.includes('504') || message.includes('FUNCTION_INVOCATION_TIMEOUT')) {
+        setSnackbar('Request timed out — please try again.');
+      } else if (message.includes('529') || message.includes('overloaded')) {
+        setSnackbar('AI service overloaded — wait a moment and retry.');
+      } else {
+        setSnackbar(`Failed to apply changes: ${message}`);
+      }
     } finally {
       setIsRevising(false);
     }

@@ -10,6 +10,7 @@ import {
   IconButton,
   CircularProgress,
   Stack,
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -39,6 +40,7 @@ export default function ThemeSummary() {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [editingColor, setEditingColor] = useState(null);
   const [tempColor, setTempColor] = useState('');
+  const [generateError, setGenerateError] = useState(null);
 
   const business = getCurrentBusiness();
 
@@ -96,6 +98,7 @@ export default function ThemeSummary() {
     }
 
     setIsGenerating(true);
+    setGenerateError(null);
     try {
       // Only include fields that actually have data
       const businessData = {
@@ -130,7 +133,16 @@ export default function ThemeSummary() {
       navigate('/preview');
     } catch (err) {
       console.error('Failed to generate website:', err);
-      alert('Failed to generate website. Please try again.');
+      const message = err.message || 'Unknown error';
+      if (message.includes('504') || message.includes('FUNCTION_INVOCATION_TIMEOUT')) {
+        setGenerateError('The request timed out. The website generation took too long — please try again.');
+      } else if (message.includes('529') || message.includes('overloaded')) {
+        setGenerateError('The AI service is currently overloaded. Please wait a minute and try again.');
+      } else if (message.includes('500')) {
+        setGenerateError('Server error. Please try again in a moment.');
+      } else {
+        setGenerateError(`Failed to generate website: ${message}`);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -354,6 +366,13 @@ export default function ThemeSummary() {
           )}
         </CardContent>
       </Card>
+
+      {/* Error Display */}
+      {generateError && (
+        <Alert severity="error" onClose={() => setGenerateError(null)} sx={{ mb: 2 }}>
+          {generateError}
+        </Alert>
+      )}
 
       {/* Generate Button */}
       <Button
